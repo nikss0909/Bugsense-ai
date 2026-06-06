@@ -225,16 +225,12 @@ GET /api/dashboard/stats
 
 ## 📈 Future Enhancements
 
-* GitHub Repository Scanning
-* AI Chat Assistant
-* Security Vulnerability Detection
-* Scan History Tracking
-* Team Collaboration Features
-* Advanced Analytics Dashboard
-* PDF & Excel Export
-* Project Health Scoring
-* Dark/Light Theme Support
-* Multi-language Code Analysis
+- Team Collaboration & Issue Assignment
+- CI/CD Integration
+- GitHub Pull Request Analysis
+- Real-time Notifications
+- Multi-Organization Support
+- API Access & Webhooks
 
 ---
 
