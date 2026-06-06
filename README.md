@@ -163,7 +163,7 @@ VITE_API_URL=http://localhost:8080/api
 ### Clone Repository
 
 ```bash
-git clone https://github.com/your-username/bugsense-ai.git
+git clone https://github.com/nikss0909/Bugsense-ai.git
 cd bugsense-ai
 ```
 
