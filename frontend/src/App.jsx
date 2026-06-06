@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import ReportDetailPage from './pages/ReportDetailPage.jsx'
 import ReportsPage from './pages/ReportsPage.jsx'
+import AdminPage from './pages/AdminPage.jsx'
+import SettingsPage from './pages/SettingsPage.jsx'
 import SignupPage from './pages/SignupPage.jsx'
 import UploadPage from './pages/UploadPage.jsx'
 
@@ -72,6 +74,8 @@ function App() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="reports/:id" element={<ReportDetailPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="admin" element={<AdminPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
     </Routes>

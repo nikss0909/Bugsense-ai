@@ -1,19 +1,36 @@
-import { Bug, FileSearch, Gauge, Loader2, Search, ShieldAlert } from 'lucide-react'
+import { motion } from 'framer-motion'
+import {
+  ArrowUpDown,
+  Bug,
+  Download,
+  FileSearch,
+  Gauge,
+  Loader2,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { api } from '../api/client.js'
 import SeverityBadge from '../components/SeverityBadge.jsx'
+import StatCard from '../components/StatCard.jsx'
 import { formatBytes, formatDate, severityOrder } from '../utils/format.js'
 
 function topSeverity(report) {
   return severityOrder.find((severity) => report.analysis?.severityCounts?.[severity] > 0) || 'low'
 }
 
+function issueCount(report) {
+  return report.analysis?.issues?.length || report.analysis?.findings?.length || 0
+}
+
 function ReportsPage() {
   const [reports, setReports] = useState([])
   const [query, setQuery] = useState('')
   const [severity, setSeverity] = useState('all')
+  const [sortBy, setSortBy] = useState('date')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -43,7 +60,7 @@ function ReportsPage() {
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
-    return reports.filter((report) => {
+    const result = reports.filter((report) => {
       const matchesQuery =
         !normalized ||
         report.fileName.toLowerCase().includes(normalized) ||
@@ -52,81 +69,64 @@ function ReportsPage() {
       const matchesSeverity = severity === 'all' || topSeverity(report) === severity
       return matchesQuery && matchesSeverity
     })
-  }, [query, reports, severity])
+
+    return [...result].sort((left, right) => {
+      if (sortBy === 'score') {
+        return (right.analysis?.qualityScore || 0) - (left.analysis?.qualityScore || 0)
+      }
+      if (sortBy === 'issues') {
+        return issueCount(right) - issueCount(left)
+      }
+      return new Date(right.createdAt || 0) - new Date(left.createdAt || 0)
+    })
+  }, [query, reports, severity, sortBy])
 
   const reportMetrics = useMemo(() => {
-    const totalFindings = reports.reduce((total, report) => total + (report.analysis?.findings?.length || 0), 0)
+    const totalFindings = reports.reduce((total, report) => total + issueCount(report), 0)
     const priorityReports = reports.filter((report) => ['critical', 'high'].includes(topSeverity(report))).length
     const scoreTotal = reports.reduce((total, report) => total + (report.analysis?.qualityScore || 0), 0)
+    const securityTotal = reports.reduce((total, report) => total + (report.analysis?.securityScore || report.analysis?.qualityScore || 0), 0)
     const averageScore = reports.length ? Math.round((scoreTotal / reports.length) * 10) / 10 : 0
-    return { totalFindings, priorityReports, averageScore }
+    const averageSecurity = reports.length ? Math.round((securityTotal / reports.length) * 10) / 10 : 0
+    return { totalFindings, priorityReports, averageScore, averageSecurity }
   }, [reports])
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase text-teal-700">Reports</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950">Reports dashboard</h1>
+          <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">Reports</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 dark:text-white">Analysis reports</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+            Search scan history, compare health scores, and open detailed remediation reports.
+          </p>
         </div>
-        <Link
-          to="/app/upload"
-          className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-        >
+        <Link to="/app/upload" className="primary-action">
           <FileSearch className="h-4 w-4" />
           New analysis
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Analyzed files</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-950">{reports.length}</p>
-            </div>
-            <div className="rounded-lg bg-teal-50 p-3 text-teal-700 ring-1 ring-teal-100">
-              <FileSearch className="h-5 w-5" />
-            </div>
-          </div>
-        </section>
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-slate-500">AI findings</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-950">{reportMetrics.totalFindings}</p>
-            </div>
-            <div className="rounded-lg bg-rose-50 p-3 text-rose-700 ring-1 ring-rose-100">
-              <Bug className="h-5 w-5" />
-            </div>
-          </div>
-        </section>
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Average quality</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-950">{reportMetrics.averageScore}</p>
-            </div>
-            <div className="rounded-lg bg-amber-50 p-3 text-amber-700 ring-1 ring-amber-100">
-              <Gauge className="h-5 w-5" />
-            </div>
-          </div>
-        </section>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={FileSearch} label="Analyzed assets" value={reports.length} detail="Files and repositories" tone="cyan" />
+        <StatCard icon={Bug} label="Total issues" value={reportMetrics.totalFindings} detail="All report findings" tone="rose" />
+        <StatCard icon={Gauge} label="Average quality" value={reportMetrics.averageScore} detail="Across reports" progress={reportMetrics.averageScore} tone="indigo" />
+        <StatCard icon={ShieldCheck} label="Security score" value={reportMetrics.averageSecurity} detail="Across reports" progress={reportMetrics.averageSecurity} tone="teal" />
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 md:grid-cols-[1fr_220px_180px]">
-          <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-100">
+      <section className="surface-card p-4">
+        <div className="grid gap-3 md:grid-cols-[1fr_220px_220px_170px]">
+          <label className="field-shell">
             <Search className="h-4 w-4 text-slate-400" />
             <input
-              className="w-full border-0 bg-transparent text-sm outline-none"
+              className="w-full border-0 bg-transparent text-sm outline-none dark:text-white"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search reports"
             />
           </label>
           <select
-            className="focus-ring rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"
+            className="focus-ring rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             value={severity}
             onChange={(event) => setSeverity(event.target.value)}
           >
@@ -137,7 +137,16 @@ function ReportsPage() {
               </option>
             ))}
           </select>
-          <div className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-600">
+          <select
+            className="focus-ring rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+          >
+            <option value="date">Newest first</option>
+            <option value="score">Best score</option>
+            <option value="issues">Most issues</option>
+          </select>
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-300">
             <ShieldAlert className="h-4 w-4 text-rose-600" />
             {reportMetrics.priorityReports} priority
           </div>
@@ -145,78 +154,88 @@ function ReportsPage() {
       </section>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-4">
+      <section className="surface-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Report inventory</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{filtered.length} matching reports</p>
+          </div>
+          <ArrowUpDown className="h-4 w-4 text-slate-400" />
+        </div>
+
         {loading ? (
-          <div className="flex h-48 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="flex h-56 items-center justify-center">
             <div className="text-center">
-              <Loader2 className="mx-auto h-7 w-7 animate-spin text-teal-600" />
-              <p className="mt-3 text-sm font-semibold text-slate-700">Loading reports</p>
+              <Loader2 className="mx-auto h-7 w-7 animate-spin text-cyan-600 dark:text-cyan-300" />
+              <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Loading reports</p>
             </div>
           </div>
         ) : filtered.length ? (
-          filtered.map((report) => (
-            <Link
-              key={report.id}
-              to={`/app/reports/${report.id}`}
-              className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md"
-            >
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate text-lg font-semibold text-slate-950">{report.fileName}</h2>
-                    <SeverityBadge severity={topSeverity(report)} />
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
-                    {report.analysis?.summary || 'Analysis completed.'}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {severityOrder.map((item) => (
-                      <span
-                        key={`${report.id}-${item}`}
-                        className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold capitalize text-slate-600"
+          <div className="overflow-x-auto">
+            <table className="data-table min-w-[920px]">
+              <thead>
+                <tr>
+                  <th>Report</th>
+                  <th>Severity</th>
+                  <th>Quality</th>
+                  <th>Security</th>
+                  <th>Issues</th>
+                  <th>Size</th>
+                  <th>Created</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((report) => (
+                  <motion.tr key={report.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <td>
+                      <Link to={`/app/reports/${report.id}`} className="block">
+                        <p className="max-w-sm truncate font-semibold text-slate-950 dark:text-white">{report.fileName}</p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{report.language}</p>
+                      </Link>
+                    </td>
+                    <td>
+                      <SeverityBadge severity={topSeverity(report)} />
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <span className="w-9 font-semibold text-slate-950 dark:text-white">{report.analysis?.qualityScore || 0}</span>
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                          <div className="h-full rounded-full bg-cyan-500" style={{ width: `${Math.min(100, report.analysis?.qualityScore || 0)}%` }} />
+                        </div>
+                      </div>
+                    </td>
+                    <td>{report.analysis?.securityScore ?? report.analysis?.qualityScore ?? 0}</td>
+                    <td>{issueCount(report)}</td>
+                    <td>{formatBytes(report.fileSize)}</td>
+                    <td>{formatDate(report.createdAt)}</td>
+                    <td>
+                      <Link
+                        to={`/app/reports/${report.id}`}
+                        className="focus-ring inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+                        aria-label="Open report"
                       >
-                        {item}: {report.analysis?.severityCounts?.[item] || 0}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-3 text-sm md:min-w-80">
-                  <div className="rounded-lg bg-slate-50 p-3">
-                    <p className="font-semibold text-slate-950">{report.language}</p>
-                    <p className="mt-1 text-xs text-slate-500">Language</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-3">
-                    <p className="font-semibold text-slate-950">{report.analysis?.qualityScore || 0}</p>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className="h-full rounded-full bg-teal-600"
-                        style={{ width: `${Math.min(100, Math.max(0, report.analysis?.qualityScore || 0))}%` }}
-                      />
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500">Score</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-3">
-                    <p className="font-semibold text-slate-950">{formatBytes(report.fileSize)}</p>
-                    <p className="mt-1 text-xs text-slate-500">Size</p>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-4 text-xs font-medium text-slate-400">{formatDate(report.createdAt)}</p>
-            </Link>
-          ))
+                        <Download className="h-4 w-4" />
+                      </Link>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <section className="rounded-lg border border-dashed border-slate-300 bg-white px-5 py-14 text-center">
+          <div className="px-5 py-16 text-center">
             <FileSearch className="mx-auto h-10 w-10 text-slate-400" />
-            <p className="mt-4 font-semibold text-slate-950">No reports found</p>
-            <p className="mt-2 text-sm text-slate-500">Analyze a source file to create the first report.</p>
-          </section>
+            <p className="mt-4 font-semibold text-slate-950 dark:text-white">No reports found</p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Analyze a file or repository to create the first report.</p>
+          </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }

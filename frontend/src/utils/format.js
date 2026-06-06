@@ -8,10 +8,10 @@ export const severityColors = {
 }
 
 export const severityBadgeClasses = {
-  critical: 'border-red-200 bg-red-50 text-red-700',
-  high: 'border-orange-200 bg-orange-50 text-orange-700',
-  medium: 'border-amber-200 bg-amber-50 text-amber-700',
-  low: 'border-teal-200 bg-teal-50 text-teal-700',
+  critical: 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-300',
+  high: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/70 dark:bg-orange-950/45 dark:text-orange-300',
+  medium: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/45 dark:text-amber-300',
+  low: 'border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-900/70 dark:bg-teal-950/45 dark:text-teal-300',
 }
 
 export function formatDate(value) {
@@ -55,7 +55,7 @@ export function authErrorMessage(error, mode) {
     return 'Invalid email or password.'
   }
   if (error?.status === 0 || error?.status === 503) {
-    return 'Server unavailable. Check that the backend and MongoDB are running.'
+    return 'Server unavailable. Check that the backend and database are running.'
   }
   if (mode === 'signup' && error?.message?.toLowerCase().includes('already exists')) {
     return 'An account with this email already exists.'

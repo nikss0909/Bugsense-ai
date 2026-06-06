@@ -28,13 +28,6 @@ public class GlobalExceptionHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-	@ExceptionHandler(GeminiApiException.class)
-	public ResponseEntity<ErrorResponse> handleGeminiException(GeminiApiException exception,
-			HttpServletRequest request) {
-		logForStatus(exception.getStatus(), request, exception.getMessage(), exception);
-		return error(exception.getStatus(), exception.getMessage(), request);
-	}
-
 	@ExceptionHandler(ApiException.class)
 	public ResponseEntity<ErrorResponse> handleApiException(ApiException exception, HttpServletRequest request) {
 		logForStatus(exception.getStatus(), request, exception.getMessage(), exception);

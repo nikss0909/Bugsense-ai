@@ -4,9 +4,9 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 const ToastContext = createContext(null)
 
 const toneByType = {
-  error: 'border-red-200 bg-red-50 text-red-800',
-  success: 'border-teal-200 bg-teal-50 text-teal-800',
-  info: 'border-slate-200 bg-white text-slate-800',
+  error: 'border-red-200 bg-red-50 text-red-800 dark:border-red-900/70 dark:bg-red-950 dark:text-red-200',
+  success: 'border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-900/70 dark:bg-teal-950 dark:text-teal-200',
+  info: 'border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100',
 }
 
 const iconByType = {

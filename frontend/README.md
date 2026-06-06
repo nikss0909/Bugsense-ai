@@ -1,6 +1,6 @@
-# BugSense AI Frontend
+# BugSense Frontend
 
-React + Vite + Tailwind CSS client for the BugSense AI automated QA platform.
+React + Vite + Tailwind CSS client for the BugSense offline static analysis platform.
 
 ```powershell
 npm install
