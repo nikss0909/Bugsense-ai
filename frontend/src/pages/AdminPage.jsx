@@ -48,7 +48,7 @@ function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">Admin</p>
+        <p className="text-sm font-semibold uppercase text-indigo-200">Admin</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 dark:text-white">Admin control center</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
           Manage users, projects, organizations, reports, account actions, and system-level statistics.
@@ -57,14 +57,14 @@ function AdminPage() {
 
       {loading ? (
         <div className="surface-card flex h-40 items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-cyan-600 dark:text-cyan-300" />
+          <Loader2 className="h-7 w-7 animate-spin text-indigo-200" />
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={Users} label="Users" value={users.length} detail="Workspace members" tone="cyan" />
+          <StatCard icon={Users} label="Users" value={users.length} detail="Workspace members" tone="blue" />
           <StatCard icon={Building2} label="Organizations" value="1" detail="Managed tenant" tone="indigo" />
-          <StatCard icon={FileSearch} label="Reports" value={stats?.totalReports || 0} detail="Saved reports" tone="teal" />
-          <StatCard icon={BarChart3} label="Issues" value={stats?.totalFindings || 0} detail="Across reports" tone="rose" />
+          <StatCard icon={FileSearch} label="Reports" value={stats?.totalReports || 0} detail="Saved reports" tone="indigo" />
+          <StatCard icon={BarChart3} label="Issues" value={stats?.totalFindings || 0} detail="Across reports" tone="violet" />
         </div>
       )}
 
@@ -100,7 +100,7 @@ function AdminPage() {
                         <button type="button" className="focus-ring rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900" aria-label="Reset account">
                           <RotateCcw className="h-4 w-4" />
                         </button>
-                        <button type="button" className="focus-ring rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/30" aria-label="Ban user">
+                        <button type="button" className="focus-ring rounded-lg border border-violet-400/35 p-2 text-violet-100 hover:bg-violet-500/10" aria-label="Ban user">
                           <Ban className="h-4 w-4" />
                         </button>
                       </div>
@@ -132,7 +132,7 @@ function AdminPage() {
 
       <section className="surface-card overflow-hidden">
         <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-          <ShieldCheck className="h-5 w-5 text-cyan-700 dark:text-cyan-300" />
+          <ShieldCheck className="h-5 w-5 text-indigo-200" />
           <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Project administration</h2>
         </div>
         <div className="overflow-x-auto">

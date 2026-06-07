@@ -4,9 +4,9 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 const ToastContext = createContext(null)
 
 const toneByType = {
-  error: 'border-red-200 bg-red-50 text-red-800 dark:border-red-900/70 dark:bg-red-950 dark:text-red-200',
-  success: 'border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-900/70 dark:bg-teal-950 dark:text-teal-200',
-  info: 'border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100',
+  error: 'border-violet-400/45 bg-violet-950/90 text-violet-50',
+  success: 'border-indigo-400/45 bg-indigo-950/90 text-indigo-50',
+  info: 'border-slate-700 bg-[#111827] text-slate-100',
 }
 
 const iconByType = {
@@ -63,7 +63,7 @@ export function ToastProvider({ children }) {
               <button
                 type="button"
                 onClick={() => dismissToast(toast.id)}
-                className="focus-ring rounded-md p-1 opacity-70 hover:bg-white/70 hover:opacity-100"
+              className="focus-ring rounded-md p-1 opacity-70 hover:bg-white/10 hover:opacity-100"
                 aria-label="Dismiss notification"
               >
                 <X className="h-4 w-4" />

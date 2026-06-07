@@ -15,7 +15,7 @@ function initialTheme() {
   if (stored === 'dark' || stored === 'light') {
     return stored
   }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'dark'
 }
 
 export function ThemeProvider({ children }) {

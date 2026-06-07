@@ -38,7 +38,7 @@ function Toggle({ checked, onChange, label, detail }) {
         <span className="block text-sm font-semibold text-slate-950 dark:text-white">{label}</span>
         <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">{detail}</span>
       </span>
-      <span className={`flex h-6 w-11 shrink-0 items-center rounded-full p-1 transition ${checked ? 'bg-cyan-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+      <span className={`flex h-6 w-11 shrink-0 items-center rounded-full p-1 transition ${checked ? 'bg-indigo-500' : 'bg-slate-700'}`}>
         <span className={`h-4 w-4 rounded-full bg-white transition ${checked ? 'translate-x-5' : ''}`} />
       </span>
     </button>
@@ -82,7 +82,7 @@ function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">Settings</p>
+        <p className="text-sm font-semibold uppercase text-indigo-200">Settings</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 dark:text-white">Workspace settings</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
           Configure profile, security, notifications, theme, API access, and connected accounts.
@@ -98,7 +98,7 @@ function SettingsPage() {
               onClick={() => setActive(value)}
               className={`focus-ring flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition ${
                 active === value
-                  ? 'bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white'
                   : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >
@@ -113,12 +113,12 @@ function SettingsPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Profile</h2>
               {message ? (
-                <div className="mt-5 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-700 dark:border-teal-900/70 dark:bg-teal-950/45 dark:text-teal-200">
+                  <div className="mt-5 rounded-lg border border-indigo-400/35 bg-indigo-950/50 px-4 py-3 text-sm font-medium text-indigo-100">
                   {message}
                 </div>
               ) : null}
               {error ? (
-                <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">
+                <div className="mt-5 rounded-lg border border-violet-400/35 bg-violet-950/50 px-4 py-3 text-sm font-medium text-violet-100">
                   {error}
                 </div>
               ) : null}
@@ -240,7 +240,7 @@ function SettingsPage() {
                     onClick={() => setTheme(option)}
                     className={`focus-ring rounded-lg border p-4 text-left ${
                       theme === option
-                        ? 'border-cyan-400 bg-cyan-50 dark:bg-cyan-950/35'
+                        ? 'border-indigo-400 bg-indigo-500/10'
                         : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:bg-slate-900'
                     }`}
                   >
@@ -305,7 +305,7 @@ function SettingsPage() {
                     <p className="font-semibold text-slate-950 dark:text-white">{name}</p>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{detail}</p>
                   </div>
-                  <span className={`inline-flex w-fit items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${connected ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
+                  <span className={`inline-flex w-fit items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${connected ? 'bg-indigo-500/10 text-indigo-100' : 'bg-slate-800 text-slate-300'}`}>
                     {connected ? <CheckCircle2 className="h-3.5 w-3.5" /> : <LockKeyhole className="h-3.5 w-3.5" />}
                     {connected ? 'Connected' : 'Available'}
                   </span>

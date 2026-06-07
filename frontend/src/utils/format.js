@@ -1,17 +1,17 @@
 export const severityOrder = ['critical', 'high', 'medium', 'low']
 
 export const severityColors = {
-  critical: '#dc2626',
-  high: '#f97316',
-  medium: '#d97706',
-  low: '#0d9488',
+  critical: '#7C3AED',
+  high: '#4F46E5',
+  medium: '#6366F1',
+  low: '#60A5FA',
 }
 
 export const severityBadgeClasses = {
-  critical: 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-300',
-  high: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/70 dark:bg-orange-950/45 dark:text-orange-300',
-  medium: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/45 dark:text-amber-300',
-  low: 'border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-900/70 dark:bg-teal-950/45 dark:text-teal-300',
+  critical: 'border-violet-400/45 bg-violet-500/15 text-violet-100 shadow-violet-950/20',
+  high: 'border-indigo-400/45 bg-indigo-500/15 text-indigo-100 shadow-indigo-950/20',
+  medium: 'border-blue-400/40 bg-blue-500/12 text-blue-100 shadow-blue-950/20',
+  low: 'border-slate-500/45 bg-slate-700/45 text-slate-100 shadow-slate-950/20',
 }
 
 export function formatDate(value) {

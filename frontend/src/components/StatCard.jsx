@@ -1,35 +1,38 @@
-function StatCard({ icon: Icon, label, value, tone = 'teal', detail, progress, trend }) {
+import { TrendingDown, TrendingUp } from 'lucide-react'
+
+function StatCard({ icon: Icon, label, value, tone = 'indigo', detail, progress, trend, trendDirection = 'up' }) {
   const tones = {
-    teal: 'bg-teal-50 text-teal-700 ring-teal-100 dark:bg-teal-400/10 dark:text-teal-300 dark:ring-teal-400/20',
-    amber: 'bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20',
-    rose: 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/20',
-    indigo: 'bg-indigo-50 text-indigo-700 ring-indigo-100 dark:bg-indigo-400/10 dark:text-indigo-300 dark:ring-indigo-400/20',
-    cyan: 'bg-cyan-50 text-cyan-700 ring-cyan-100 dark:bg-cyan-400/10 dark:text-cyan-300 dark:ring-cyan-400/20',
+    blue: 'bg-blue-500/12 text-blue-100 ring-blue-400/25',
+    indigo: 'bg-indigo-500/12 text-indigo-100 ring-indigo-400/25',
+    violet: 'bg-violet-500/12 text-violet-100 ring-violet-400/25',
+    slate: 'bg-slate-700/55 text-slate-100 ring-slate-500/35',
   }
+  const TrendIcon = trendDirection === 'down' ? TrendingDown : TrendingUp
 
   return (
-    <section className="surface-card p-5 transition hover:-translate-y-0.5 hover:shadow-md dark:hover:border-slate-700">
+    <section className="surface-card group p-5 transition duration-200 hover:-translate-y-1 hover:border-indigo-500/60 hover:shadow-[0_24px_80px_rgba(79,70,229,0.18)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-          <p className="mt-3 truncate text-3xl font-semibold tracking-normal text-slate-950 dark:text-white">{value}</p>
+          <p className="text-sm font-medium text-slate-400">{label}</p>
+          <p className="mt-3 truncate text-3xl font-semibold tracking-normal text-white">{value}</p>
         </div>
-        <div className={`rounded-lg p-3 ring-1 ${tones[tone] || tones.teal}`}>
+        <div className={`rounded-lg p-3 ring-1 transition group-hover:scale-105 ${tones[tone] || tones.indigo}`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
       {typeof progress === 'number' ? (
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-800">
           <div
-            className="h-full rounded-full bg-cyan-500"
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
         </div>
       ) : null}
       <div className="mt-4 flex items-center justify-between gap-3">
-        {detail ? <p className="min-w-0 text-sm text-slate-500 dark:text-slate-400">{detail}</p> : <span />}
+        {detail ? <p className="min-w-0 text-sm text-slate-400">{detail}</p> : <span />}
         {trend ? (
-          <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-indigo-400/30 bg-indigo-500/10 px-2 py-1 text-xs font-semibold text-indigo-100">
+            <TrendIcon className="h-3.5 w-3.5" />
             {trend}
           </span>
         ) : null}

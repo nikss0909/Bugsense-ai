@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
+import LandingPage from './pages/LandingPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import ReportDetailPage from './pages/ReportDetailPage.jsx'
@@ -14,8 +15,8 @@ import UploadPage from './pages/UploadPage.jsx'
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+    <div className="flex min-h-screen items-center justify-center bg-[#0F172A]">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-800 border-t-indigo-500" />
     </div>
   )
 }
@@ -43,7 +44,7 @@ function PublicRoute({ children }) {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route
         path="/login"
         element={

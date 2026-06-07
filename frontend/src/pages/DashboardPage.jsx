@@ -3,14 +3,15 @@ import {
   Activity,
   Bug,
   FileCheck2,
+  FileCode2,
   Gauge,
-  GitBranch,
+  Layers3,
+  Lightbulb,
+  Search,
   ShieldAlert,
-  ShieldCheck,
   Sparkles,
-  Timer,
+  TestTube2,
   UploadCloud,
-  Users,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -21,8 +22,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -50,12 +49,22 @@ function shortDate(value) {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(value))
 }
 
-function averageFromReports(reports, key, fallback = 0) {
-  const values = reports
-    .map((report) => report.analysis?.[key])
-    .filter((value) => typeof value === 'number')
-  if (!values.length) return fallback
-  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+function issueCount(report) {
+  return report.analysis?.analysisSummary?.totalIssues || report.analysis?.issues?.length || report.analysis?.findings?.length || 0
+}
+
+function topEntry(source = {}, fallback = 'Not enough data') {
+  const [name, value] = Object.entries(source).sort((left, right) => right[1] - left[1])[0] || []
+  return { name: name || fallback, value: value || 0 }
+}
+
+function trendCopy(data) {
+  if (data.length < 2) return { label: 'Baseline', direction: 'up' }
+  const previous = data[data.length - 2].quality || 0
+  const current = data[data.length - 1].quality || 0
+  const delta = Math.round(current - previous)
+  if (delta === 0) return { label: 'Stable', direction: 'up' }
+  return { label: `${delta > 0 ? '+' : ''}${delta} pts`, direction: delta >= 0 ? 'up' : 'down' }
 }
 
 function DashboardSkeleton() {
@@ -108,6 +117,17 @@ function DashboardPage() {
   }, [])
 
   const recentReports = useMemo(() => stats.recentReports || [], [stats.recentReports])
+  const trendData = useMemo(
+    () =>
+      [...recentReports].reverse().map((report) => ({
+        name: shortDate(report.createdAt),
+        quality: report.analysis?.qualityScore || stats.averageQualityScore || 0,
+        security: report.analysis?.securityScore || report.analysis?.qualityScore || 0,
+        issues: issueCount(report),
+      })),
+    [recentReports, stats.averageQualityScore],
+  )
+
   const severityData = useMemo(
     () =>
       severityOrder.map((severity) => ({
@@ -118,39 +138,29 @@ function DashboardPage() {
     [stats.severityTotals],
   )
 
-  const languageData = useMemo(
+  const filesAnalyzed = useMemo(
     () =>
-      Object.entries(stats.languageUsage || {}).map(([name, value]) => ({
-        name,
-        value,
-      })),
-    [stats.languageUsage],
+      recentReports.reduce((total, report) => {
+        const repoFiles = report.analysis?.repositoryStats?.analyzedFiles
+        return total + (repoFiles || 1)
+      }, 0) || stats.totalScans || stats.totalReports || 0,
+    [recentReports, stats.totalReports, stats.totalScans],
   )
 
-  const trendData = useMemo(
-    () =>
-      [...recentReports].reverse().map((report, index) => ({
-        name: shortDate(report.createdAt),
-        quality: report.analysis?.qualityScore || stats.averageQualityScore || 0,
-        security: report.analysis?.securityScore || report.analysis?.qualityScore || 0,
-        issues: report.analysis?.analysisSummary?.totalIssues || report.analysis?.issues?.length || index,
-      })),
-    [recentReports, stats.averageQualityScore],
+  const testCasesGenerated = useMemo(
+    () => recentReports.reduce((total, report) => total + (report.analysis?.testSuggestions?.length || 0), 0),
+    [recentReports],
   )
 
-  const commonIssues = useMemo(
-    () =>
-      Object.entries(stats.mostCommonIssueTypes || {}).map(([title, count]) => ({
-        title,
-        count,
-      })),
-    [stats.mostCommonIssueTypes],
+  const totalFixesSuggested = useMemo(
+    () => recentReports.reduce((total, report) => total + (report.analysis?.fixRecommendations?.length || 0), 0),
+    [recentReports],
   )
 
-  const averageSecurity = averageFromReports(recentReports, 'securityScore', stats.averageQualityScore || 0)
-  const averageMaintainability = averageFromReports(recentReports, 'maintainabilityScore', stats.averageQualityScore || 0)
-  const healthScore = Math.round(((stats.averageQualityScore || 0) + averageSecurity + averageMaintainability) / 3)
-  const criticalIssues = stats.severityTotals?.critical || 0
+  const commonBug = useMemo(() => topEntry(stats.mostCommonIssueTypes, 'No issue category yet'), [stats.mostCommonIssueTypes])
+  const commonLanguage = useMemo(() => topEntry(stats.languageUsage, 'No language yet'), [stats.languageUsage])
+  const scoreTrend = trendCopy(trendData)
+  const criticalBugs = stats.severityTotals?.critical || 0
 
   if (loading) {
     return <DashboardSkeleton />
@@ -160,45 +170,45 @@ function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">Enterprise dashboard</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 dark:text-white">Project health command center</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Quality, security, maintainability, repository activity, and team signals in one operational view.
+          <p className="text-sm font-semibold uppercase text-indigo-200">Dashboard</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-white">Code quality command center</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            Monitor analysis history, severity movement, quality score trends, and remediation coverage from one workspace.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link to="/app/reports" className="secondary-action">
             <FileCheck2 className="h-4 w-4" />
-            View reports
+            View history
           </Link>
           <Link to="/app/upload" className="primary-action">
             <UploadCloud className="h-4 w-4" />
-            New scan
+            New analysis
           </Link>
         </div>
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">
+        <div className="rounded-lg border border-violet-400/35 bg-violet-950/50 px-4 py-3 text-sm font-medium text-violet-100">
           {error}
         </div>
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={GitBranch} label="Total projects" value={stats.totalReports || 0} detail="Tracked scans and repositories" trend="+12%" tone="cyan" />
-        <StatCard icon={Bug} label="Total issues" value={stats.totalFindings || 0} detail="Open findings" tone="rose" progress={Math.min(100, stats.totalFindings || 0)} />
-        <StatCard icon={ShieldCheck} label="Security score" value={averageSecurity || 0} detail="Recent scan average" tone="teal" progress={averageSecurity || 0} />
-        <StatCard icon={Gauge} label="Health score" value={healthScore || 0} detail="Quality plus security" tone="indigo" progress={healthScore || 0} />
+        <StatCard icon={FileCode2} label="Files Analyzed" value={filesAnalyzed} detail="Files and repository assets" tone="blue" trend="+12%" />
+        <StatCard icon={Bug} label="Critical Bugs Found" value={criticalBugs} detail="Highest-priority queue" tone="violet" trend={criticalBugs ? 'Needs review' : 'Clear'} trendDirection={criticalBugs ? 'up' : 'down'} />
+        <StatCard icon={Gauge} label="Average Quality Score" value={Math.round(stats.averageQualityScore || 0)} detail="Across saved reports" tone="indigo" progress={stats.averageQualityScore || 0} trend={scoreTrend.label} trendDirection={scoreTrend.direction} />
+        <StatCard icon={TestTube2} label="Test Cases Generated" value={testCasesGenerated} detail="From recent reports" tone="slate" trend={`${totalFixesSuggested} fixes`} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <section className="surface-card p-5">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Quality and security trends</h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Recent scan score movement.</p>
+              <h2 className="text-lg font-semibold text-white">Quality trend chart</h2>
+              <p className="mt-1 text-sm text-slate-400">Score history from recent analyses.</p>
             </div>
-            <span className="inline-flex items-center gap-2 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+            <span className="inline-flex items-center gap-2 rounded-md border border-indigo-400/30 bg-indigo-500/10 px-2 py-1 text-xs font-semibold text-indigo-100">
               <Activity className="h-3.5 w-3.5" />
               Live history
             </span>
@@ -207,16 +217,22 @@ function DashboardPage() {
             {trendData.length ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                  <YAxis domain={[0, 100]} tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="quality" stroke="#0891b2" fill="#06b6d4" fillOpacity={0.14} />
-                  <Area type="monotone" dataKey="security" stroke="#10b981" fill="#10b981" fillOpacity={0.12} />
+                  <defs>
+                    <linearGradient id="qualityGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#4F46E5" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} stroke="#94A3B8" />
+                  <YAxis domain={[0, 100]} tickLine={false} axisLine={false} stroke="#94A3B8" />
+                  <Tooltip contentStyle={{ background: '#111827', border: '1px solid #1F2937', color: '#F8FAFC' }} />
+                  <Area type="monotone" dataKey="quality" stroke="#7C3AED" fill="url(#qualityGradient)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="security" stroke="#60A5FA" fill="transparent" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-indigo-400/25 bg-[#0F172A]/60 text-sm text-slate-400">
                 No trend data yet
               </div>
             )}
@@ -226,25 +242,27 @@ function DashboardPage() {
         <section className="surface-card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Project health</h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Weighted operational posture.</p>
+              <h2 className="text-lg font-semibold text-white">Dashboard insights</h2>
+              <p className="mt-1 text-sm text-slate-400">Signals derived from saved scans.</p>
             </div>
-            <Sparkles className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+            <Sparkles className="h-5 w-5 text-violet-200" />
           </div>
-          <div className="mt-6 grid gap-4">
+          <div className="mt-6 space-y-3">
             {[
-              ['Quality', stats.averageQualityScore || 0, 'bg-cyan-500'],
-              ['Security', averageSecurity || 0, 'bg-emerald-500'],
-              ['Maintainability', averageMaintainability || 0, 'bg-indigo-500'],
-              ['Critical risk', criticalIssues ? Math.max(0, 100 - criticalIssues * 15) : 100, 'bg-rose-500'],
-            ].map(([label, value, color]) => (
-              <div key={label}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">{label}</span>
-                  <span className="font-semibold text-slate-950 dark:text-white">{value}</span>
-                </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+              [Lightbulb, 'Most common bug category', commonBug.name, `${commonBug.value} matches`],
+              [Layers3, 'Most analyzed language', commonLanguage.name, `${commonLanguage.value} scans`],
+              [ShieldAlert, 'Total fixes suggested', totalFixesSuggested, 'Recent report recommendations'],
+            ].map(([Icon, label, value, detail]) => (
+              <div key={label} className="rounded-lg border border-[#1F2937] bg-[#0F172A]/65 p-4 transition hover:border-indigo-500/50">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/12 text-indigo-100 ring-1 ring-indigo-400/25">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+                    <p className="mt-1 truncate text-lg font-semibold text-white">{value}</p>
+                    <p className="mt-1 text-sm text-slate-400">{detail}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -252,16 +270,17 @@ function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_0.65fr_0.75fr]">
+      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="surface-card p-5">
-          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Severity distribution</h2>
+          <h2 className="text-lg font-semibold text-white">Severity distribution</h2>
+          <p className="mt-1 text-sm text-slate-400">Findings grouped by report severity.</p>
           <div className="mt-5 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={severityData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="severity" tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(148, 163, 184, 0.12)' }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
+                <XAxis dataKey="severity" tickLine={false} axisLine={false} stroke="#94A3B8" />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="#94A3B8" />
+                <Tooltip cursor={{ fill: 'rgba(79, 70, 229, 0.1)' }} contentStyle={{ background: '#111827', border: '1px solid #1F2937', color: '#F8FAFC' }} />
                 <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                   {severityData.map((entry) => (
                     <Cell key={entry.severity} fill={entry.fill} />
@@ -272,79 +291,37 @@ function DashboardPage() {
           </div>
         </section>
 
-        <section className="surface-card p-5">
-          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Language distribution</h2>
-          <div className="mt-5 h-64">
-            {languageData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={languageData} dataKey="value" nameKey="name" innerRadius={54} outerRadius={84}>
-                    {languageData.map((entry, index) => (
-                      <Cell key={entry.name} fill={['#0891b2', '#10b981', '#6366f1', '#f97316', '#e11d48'][index % 5]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                No scans yet
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="surface-card p-5">
-          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Team activity</h2>
-          <div className="mt-5 space-y-4">
-            {[
-              [Users, '3 active reviewers', 'Issue triage'],
-              [ShieldAlert, `${criticalIssues} critical issues`, 'Security queue'],
-              [Timer, '24m avg scan time', 'Repository jobs'],
-            ].map(([Icon, titleText, detail]) => (
-              <div key={titleText} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/60">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-950 dark:text-white">{titleText}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.8fr]">
         <section className="surface-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Recent scans</h2>
-            <Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300" to="/app/reports">
-              View all
+          <div className="flex items-center justify-between border-b border-[#1F2937] px-5 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Recent analysis history</h2>
+              <p className="mt-1 text-sm text-slate-400">Latest saved reports.</p>
+            </div>
+            <Link className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-100 hover:text-white" to="/app/reports">
+              <Search className="h-4 w-4" />
+              Search
             </Link>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-[#1F2937]">
             {recentReports.length ? (
               recentReports.map((report) => {
                 const severity = severityOrder.find((item) => report.analysis?.severityCounts?.[item] > 0) || 'low'
-                const findingCount = report.analysis?.issues?.length || report.analysis?.findings?.length || 0
                 return (
                   <motion.div key={report.id} whileHover={{ x: 3 }}>
                     <Link
                       to={`/app/reports/${report.id}`}
-                      className="flex flex-col gap-3 px-5 py-4 transition hover:bg-slate-50 dark:hover:bg-slate-900 md:flex-row md:items-center md:justify-between"
+                      className="flex flex-col gap-3 px-5 py-4 transition hover:bg-indigo-500/8 md:flex-row md:items-center md:justify-between"
                     >
-                      <div>
-                        <p className="font-semibold text-slate-950 dark:text-white">{report.fileName}</p>
-                        <div className="mt-1 flex flex-wrap gap-2 text-sm text-slate-500 dark:text-slate-400">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-white">{report.fileName}</p>
+                        <div className="mt-1 flex flex-wrap gap-2 text-sm text-slate-400">
                           <span>{report.language}</span>
                           <span>{formatDate(report.createdAt)}</span>
-                          <span>{findingCount} findings</span>
+                          <span>{issueCount(report)} findings</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        <span className="text-sm font-semibold text-slate-300">
                           Score {report.analysis?.qualityScore || 0}
                         </span>
                         <SeverityBadge severity={severity} />
@@ -354,28 +331,10 @@ function DashboardPage() {
                 )
               })
             ) : (
-              <div className="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                No reports yet
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="surface-card p-5">
-          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">Common issue types</h2>
-          <div className="mt-5 space-y-3">
-            {commonIssues.length ? (
-              commonIssues.map((issue) => (
-                <div key={issue.title} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-950/60">
-                  <span className="min-w-0 truncate font-medium text-slate-700 dark:text-slate-200">{issue.title}</span>
-                  <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
-                    {issue.count}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                No issue trends yet
+              <div className="px-5 py-12 text-center">
+                <FileCode2 className="mx-auto h-10 w-10 text-indigo-200" />
+                <p className="mt-4 font-semibold text-white">No reports yet</p>
+                <p className="mt-2 text-sm text-slate-400">Run your first analysis to populate trends and insights.</p>
               </div>
             )}
           </div>

@@ -6,7 +6,7 @@ function SeverityBadge({ severity = 'low' }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold uppercase ${classes}`}
+      className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold uppercase shadow-sm ${classes}`}
     >
       {normalized}
     </span>
